@@ -72,31 +72,12 @@ class SACPolicy(BASE.BasePolicy):
                 _ts = torch.zeros((3, len(n_s), 2))
                 mean, _, _ = naf_list[skill_id].prob(t_p_s[skill_id])
                 _nps = t_p_s[skill_id].cpu().numpy()
-                action = -np.ones(len(_nps))
-                n_s = self.env.pseudo_step(_nps, action)
-                _ts[0] = torch.from_numpy(n_s).to(DEVICE)
-                action = np.zeros(len(_nps))
-                n_s = self.env.pseudo_step(_nps, action)
-                _ts[1] = torch.from_numpy(n_s).to(DEVICE)
-                action = np.ones(len(_nps))
-                n_s = self.env.pseudo_step(_nps, action)
-                _ts[2] = torch.from_numpy(n_s).to(DEVICE)
-
-                target_0 = cal_reward(t_p_s[skill_id], _ts[0], self.sk_n)
-                target_0 = target_0 - cal_reward(t_p_s[skill_id], t_p_s[skill_id], self.sk_n)
-                target_1 = cal_reward(t_p_s[skill_id], _ts[1], self.sk_n)
-                target_1 = target_1 - cal_reward(t_p_s[skill_id], t_p_s[skill_id], self.sk_n)
-                target_2 = cal_reward(t_p_s[skill_id], _ts[1], self.sk_n)
-                target_2 = target_2 - cal_reward(t_p_s[skill_id], t_p_s[skill_id], self.sk_n)
-                target = torch.cat((target_0, target_1), -1)
-                target = torch.cat((target, target_2), -1)
-                # target size len, 3
 
                 x = torch.tensor([-1, 0, 1])
                 x = x.repeat(len(_nps))
                 diff = (x - mean.squeeze())
                 prob = (-1 / 2) * torch.square(diff)
-                policy_loss = torch.sum(torch.exp(prob) * (prob - target))
+                policy_loss = torch.sum(torch.exp(prob) * (prob - base_queue_list[skill_id](t_p_s, x).squeeze()))
 
                 skill_id = skill_id + 1
 
@@ -107,9 +88,9 @@ class SACPolicy(BASE.BasePolicy):
             queue_loss = 0
             while skill_id < self.sk_n:
                 t_p_qvalue = upd_queue_list[skill_id](sa_pair[skill_id]).squeeze()
-                act = naf_list[skill_id]()
-                sa_pair = torch.cat((t_s, act), -1).type(torch.float32)
-                t_qvalue = t_r[skill_id] + GAMMA*base_queue_list[skill_id]().squeeze()
+                act, _, _ = naf_list[skill_id].prob(t_s[skill_id])
+                sa_pair_ = torch.cat((t_s, act), -1).type(torch.float32)
+                t_qvalue = t_r[skill_id] + GAMMA*base_queue_list[skill_id](sa_pair_).squeeze()
 
                 queue_loss = queue_loss + self.criterion(t_p_qvalue, t_qvalue)
                 skill_id = skill_id + 1
@@ -117,7 +98,6 @@ class SACPolicy(BASE.BasePolicy):
 
             print("policy loss = ", policy_loss)
 
-            # print("queue_loss = ", queue_loss)
             optimizer_p.zero_grad()
             policy_loss.backward(retain_graph=True)
 
