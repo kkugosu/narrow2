@@ -48,7 +48,7 @@ class SACPolicy(BASE.BasePolicy):
 
             n_p_s, n_a, n_s, n_r, n_d, sk_idx = np.squeeze(trajectory)
             t_p_s = torch.tensor(n_p_s, dtype=torch.float32).to(self.device)
-            # t_p_s = batch_state_converter(t_p_s)
+
             if encoder is not None:
                 with torch.no_grad():
                     encoded_t_p_s = encoder(t_p_s)
@@ -62,8 +62,6 @@ class SACPolicy(BASE.BasePolicy):
             t_r_u = t_r.unsqueeze(-1)
             t_r = self.skill_converter(t_r_u, sk_idx, per_one=0).squeeze()
             t_r = t_r.unsqueeze(0)
-            # policy_loss = torch.mean(torch.log(t_p_weight) - t_p_qvalue)
-            # we already sampled according to policy
 
             policy_loss = torch.tensor(0).to(self.device).type(torch.float32)
 
@@ -94,13 +92,12 @@ class SACPolicy(BASE.BasePolicy):
 
                 queue_loss = queue_loss + self.criterion(t_p_qvalue, t_qvalue)
                 skill_id = skill_id + 1
-            print("queueloss = ", queue_loss)
 
+            print("queueloss = ", queue_loss)
             print("policy loss = ", policy_loss)
 
             optimizer_p.zero_grad()
             policy_loss.backward(retain_graph=True)
-
             i = 0  # seq training
             while i < len(policy_list):
                 for param in policy_list[i].parameters():
