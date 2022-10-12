@@ -30,7 +30,7 @@ class SACPolicy(BASE.BasePolicy):
         n_a = n_a
         return n_a
 
-    def update(self, *trajectory, cal_reward, policy_list, naf_list, upd_queue_list, base_queue_list,
+    def update(self, *trajectory, policy_list, naf_list, upd_queue_list, base_queue_list,
                optimizer_p, optimizer_q, memory_iter=0, encoder=None):
         i = 0
         queue_loss = None
@@ -71,9 +71,11 @@ class SACPolicy(BASE.BasePolicy):
                 mean, _, _ = naf_list[skill_id].prob(t_p_s[skill_id])
                 _nps = t_p_s[skill_id].cpu().numpy()
 
-                x = torch.tensor([-1, 0, 1])
-                x = x.repeat(len(_nps))
-                diff = (x - mean.squeeze())
+                x = torch.tensor([-1, 0, 1]).to(DEVICE)
+                x = x.repeat((len(_nps), 1))
+
+                diff = (x - mean.repeat((1, 3)))
+
                 prob = (-1 / 2) * torch.square(diff)
                 policy_loss = torch.sum(torch.exp(prob) * (prob - base_queue_list[skill_id](t_p_s, x).squeeze()))
 

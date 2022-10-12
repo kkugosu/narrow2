@@ -86,12 +86,14 @@ class Concept(BASE.BaseControl):
         distance_mat = torch.square(t_p_s[:, 1].unsqueeze(0) - t_s[:, 1].unsqueeze(1))
         traj = len(t_p_s) / self.sk_n
         subtract = torch.zeros(len(t_p_s)).to(DEVICE)
+        print(traj)
+
         i = 0
         while i < len(t_p_s):
-            if int(sk_idx * traj + i + 1) == int((sk_idx + 1) * traj):
+            if int(sk_idx[i] * traj + i + 1) == int((sk_idx[i] + 1) * traj):
                 subtract[i] = torch.tensor(0)
             else:
-                subtract[i] = torch.sum(distance_mat[int(sk_idx * traj + i + 1):int((sk_idx + 1) * traj)], -1)
+                subtract[i] = torch.sum(distance_mat[i][int(sk_idx[i] * traj + i + 1):int((sk_idx[i] + 1) * traj)], -1)
             i = i + 1
         # 0 부터 subtract, ts가 tps랑 같아지는 시점부터
         distance = torch.sum(distance_mat, -1)
@@ -103,10 +105,10 @@ class Concept(BASE.BaseControl):
         subtract = torch.zeros(len(t_p_s)).to(DEVICE)
         i = 0
         while i < len(t_p_s):
-            if int(sk_idx * traj + i + 1) == int((sk_idx + 1) * traj):
+            if int(sk_idx[i] * traj + i + 1) == int((sk_idx[i] + 1) * traj):
                 subtract[i] = torch.tensor(0)
             else:
-                subtract[i] = torch.sum(distance_mat[int(sk_idx * traj + i + 1):int((sk_idx + 1) * traj)], -1)
+                subtract[i] = torch.sum(distance_mat[i][int(sk_idx[i] * traj + i + 1):int((sk_idx[i] + 1) * traj)], -1)
             i = i + 1
         # 0바로 다음부터 subtract, tps랑 target tps랑 같아지는 시점 이후부터 뭐0 부터해도 상관없음
         distance = torch.sum(distance_mat, -1)
