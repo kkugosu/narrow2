@@ -132,22 +132,18 @@ class NAFPolicy:
         self.policy = policy
 
     def prob(self, state):
-        action = self.policy(state)
-        if len(action) == 2:
-            mean = action[0] - action[1]
-            mean = mean.unsqueeze(-1)
-            std = torch.tensor([0.25]).to(DEVICE)
-        else:
-            mean = action[:, 0] - action[:, 1]
-            mean = mean.unsqueeze(-1)
-            std = torch.ones([len(action), 1]).to(DEVICE)/4
+        action_var = self.policy(state)
+        action, var = torch.split(action_var, [1, 1], dim=-1)
+
+        std = var**2
+
         # print("prepse = ", pre_psd)
         # print("mean = ", mean)
         # psd = cov matrix
         # print(mean)
         # print(psd)
 
-        return mean, std, torch.normal(mean=mean, std=std)
+        return action, std, torch.normal(mean=action, std=std)
         # psd = psd no exception occered
 
 

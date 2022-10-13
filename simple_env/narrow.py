@@ -65,8 +65,8 @@ class Narrow:
         self.player.state = np.array([self.SCREEN_WIDTH/2, self.SCREEN_HEIGHT/2])
         self.big_wall1 = Wall(-400, -400, 2400, 410)
         self.big_wall2 = Wall(-400, 190, 2400, 410)
-        self.big_wall3 = Wall(-400, -400, 410, 1200)
-        self.big_wall4 = Wall(1590, -400, 410, 1200)
+        self.big_wall3 = Wall(-400, -400, 410, 1000)
+        self.big_wall4 = Wall(1590, -400, 410, 1000)
         self.walls = pygame.sprite.Group()
         self.walls.add(self.big_wall1)
         self.walls.add(self.big_wall2)
@@ -74,26 +74,26 @@ class Narrow:
         self.walls.add(self.big_wall4)
 
     def reset(self):
-        self.player.state = np.array([50, 80])
-        return (self.player.state - np.array([50, 80]))/100
+        self.player.state = np.array([50, 100])
+        return (self.player.state - np.array([50, 100]))/100
 
     def step(self, act):
 
-        self.player.state = self.player.state + np.array([1, act*20])
+        self.player.state = self.player.state + np.array([1, act*10])
         self.player.update_rect()
         for args in self.walls:
             if pygame.sprite.collide_rect(self.player, args):
 
-                self.player.state = self.player.state - np.array([0, act*20])
+                self.player.state = self.player.state - np.array([0, act*10])
                 break
                 # collide when this change
         reward = 0
         info = {}
-        return (self.player.state - np.array([50, 80]))/100, reward, info
+        return (self.player.state - np.array([50, 100]))/100, reward, info
 
     def pseudo_step(self, state, act):
 
-        self.player.state = state*100 + np.array([50, 80])
+        self.player.state = state*100 + np.array([50, 100])
         self.player.state = self.player.state + np.array([1, act*20])
         self.player.update_rect()
         for args in self.walls:
@@ -104,7 +104,7 @@ class Narrow:
                 # collide when this change
         reward = 0
         info = {}
-        return (self.player.state - np.array([50, 80]))/100, reward, info
+        return (self.player.state - np.array([50, 100]))/100, reward, info
 
     def render(self):
         for event in pygame.event.get():

@@ -25,9 +25,10 @@ class SACPolicy(BASE.BasePolicy):
             t_s = encoder(t_s)
         with torch.no_grad():
             mean, v, t_a = policy[index].prob(t_s)
-            t_a = torch.clamp(t_a, min=-20, max=20)
+            t_a = torch.clamp(t_a, min=-200, max=200)
             if random == 0:
-                t_a = torch.clamp(mean, min=-20, max=20)
+                t_a = torch.clamp(mean, min=-200, max=200)
+
         n_a = t_a.cpu().numpy()
         n_a = n_a
 
@@ -71,15 +72,15 @@ class SACPolicy(BASE.BasePolicy):
             skill_id = 0  # seq training
             while skill_id < self.sk_n:
                 _ts = torch.zeros((3, len(n_s), 2))
-                mean, _, _ = naf_list[skill_id].prob(t_p_s[skill_id])
+                mean, cov, _ = naf_list[skill_id].prob(t_p_s[skill_id])
                 _nps = t_p_s[skill_id].cpu().numpy()
 
-                x = torch.tensor([-1, 0, 1]).to(DEVICE)
+                x = torch.tensor([-20, 0, 20]).to(DEVICE)
                 x = x.repeat((len(_nps), 1))
 
                 diff = (x - mean.repeat((1, 3)))
 
-                prob = (-1 / 2) * torch.square(diff)
+                prob = (-1 / 2) * torch.square(diff/cov)
 
                 new_tps = t_p_s[0].repeat((1, 3))
                 new_tps = new_tps.reshape(-1, 2)

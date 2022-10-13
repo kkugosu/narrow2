@@ -27,7 +27,7 @@ class Concept(BASE.BaseControl):
         self.upd_queue_list = []
         self.base_queue_list = []
         self.naf_out_l = 1
-        self.upd_policy = basic_nn.ProbNN(self.s_l, 256, self.a_l).to(self.device)
+        self.upd_policy = basic_nn.ValueNN(self.s_l, 256, self.a_l).to(self.device)
         self.upd_queue = basic_nn.ValueNN((self.s_l + self.naf_out_l), 256, 1).to(self.device)
         self.base_queue = basic_nn.ValueNN((self.s_l + self.naf_out_l), 256, 1).to(self.device)
 
