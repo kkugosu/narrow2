@@ -63,10 +63,10 @@ class Narrow:
         self.screen = pygame.display.set_mode([self.SCREEN_WIDTH, self.SCREEN_HEIGHT])
         self.player = Player()
         self.player.state = np.array([self.SCREEN_WIDTH/2, self.SCREEN_HEIGHT/2])
-        self.big_wall1 = Wall(0, 0, 1600, 40)
-        self.big_wall2 = Wall(0, 160, 1600, 40)
-        self.big_wall3 = Wall(0, 0, 40, 200)
-        self.big_wall4 = Wall(1560, 0, 40, 200)
+        self.big_wall1 = Wall(-400, -400, 2400, 410)
+        self.big_wall2 = Wall(-400, 190, 2400, 410)
+        self.big_wall3 = Wall(-400, -400, 410, 1200)
+        self.big_wall4 = Wall(1590, -400, 410, 1200)
         self.walls = pygame.sprite.Group()
         self.walls.add(self.big_wall1)
         self.walls.add(self.big_wall2)
@@ -79,12 +79,12 @@ class Narrow:
 
     def step(self, act):
 
-        self.player.state = self.player.state + np.array([1, act*10])
+        self.player.state = self.player.state + np.array([1, act*20])
         self.player.update_rect()
         for args in self.walls:
             if pygame.sprite.collide_rect(self.player, args):
 
-                self.player.state = self.player.state - np.array([0, act*10])
+                self.player.state = self.player.state - np.array([0, act*20])
                 break
                 # collide when this change
         reward = 0
@@ -94,12 +94,12 @@ class Narrow:
     def pseudo_step(self, state, act):
 
         self.player.state = state*100 + np.array([50, 80])
-        self.player.state = self.player.state + np.array([1, act*10])
+        self.player.state = self.player.state + np.array([1, act*20])
         self.player.update_rect()
         for args in self.walls:
             if pygame.sprite.collide_rect(self.player, args):
 
-                self.player.state = self.player.state - np.array([0, act*10])
+                self.player.state = self.player.state - np.array([0, act*20])
                 break
                 # collide when this change
         reward = 0

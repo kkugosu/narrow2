@@ -79,6 +79,7 @@ class Memory:
         if pretrain == 1:
             with torch.no_grad():
                 reward = reward_f(next(iter(self.dataloader)))
+                # print("reward = ", reward[-100:-1])
             self.reward_converter(reward)
         else:
             pass

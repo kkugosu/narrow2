@@ -135,11 +135,12 @@ class NAFPolicy:
         action = self.policy(state)
         if len(action) == 2:
             mean = action[0] - action[1]
-            std = torch.tensor([0.2]).to(DEVICE)
+            mean = mean.unsqueeze(-1)
+            std = torch.tensor([0.25]).to(DEVICE)
         else:
             mean = action[:, 0] - action[:, 1]
             mean = mean.unsqueeze(-1)
-            std = torch.ones([len(action), 1]).to(DEVICE)/5
+            std = torch.ones([len(action), 1]).to(DEVICE)/4
         # print("prepse = ", pre_psd)
         # print("mean = ", mean)
         # psd = cov matrix

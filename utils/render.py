@@ -33,9 +33,10 @@ class Render:
         while t < self.skill_num*traj:
             # n_a = self.policy.action(n_p_o, self.index, per_one=1)
             # print(cir)
-            n_a = self.policy.action(n_p_o, self.naf, index=cir, per_one=1, encoder=self.key)
+            n_a = self.policy.action(n_p_o, self.naf, index=cir, per_one=1, encoder=self.key, random=1)
             t_p_o = torch.from_numpy(n_p_o)
             t_a = torch.from_numpy(n_a)
+
             sa = torch.cat((t_p_o, t_a), -1).type(torch.float32)
             if traj is None:
                 n_o, n_r, n_d, info = self.env.step(n_a)

@@ -45,22 +45,30 @@ class Concept(BASE.BaseControl):
             tmp_policy = copy.deepcopy(self.upd_policy)
 
             assert tmp_policy is not self.upd_policy, "copy error"
-            for param in tmp_policy.parameters():
+            for name, param in tmp_policy.named_parameters():
+
                 torch.nn.init.uniform_(param, -0.1, 0.1)
                 param.register_hook(lambda grad: torch.nan_to_num(grad, nan=0.0))
                 network_p.append(param)
-                lr_p.append(self.l_r*10)
+                if name == "Linear_1.bias":
+                    lr_p.append(self.l_r*100)
+                else:
+                    lr_p.append(self.l_r)
                 weight_decay_p.append(0.1)
             self.policy_list.append(tmp_policy)
 
             tmp_queue = copy.deepcopy(self.upd_queue)
             assert tmp_queue is not self.upd_queue, "copy error"
 
-            for param in tmp_queue.parameters():
+            for name, param in tmp_queue.named_parameters():
                 torch.nn.init.uniform_(param, -0.2, 0.2)
                 param.register_hook(lambda grad: torch.nan_to_num(grad, nan=0.0))
                 network_q.append(param)
-                lr_q.append(self.l_r*10)
+                if name == "Linear_1.bias":
+                    lr_p.append(self.l_r*100)
+                else:
+                    lr_p.append(self.l_r)
+                lr_q.append(self.l_r)
                 weight_decay_q.append(0.1)
             self.upd_queue_list.append(tmp_queue)
 
@@ -115,23 +123,25 @@ class Concept(BASE.BaseControl):
 
         reward = reward - distance + subtract
 
-        narrow_bias_1 = torch.ones(1600).to(DEVICE) * 0.8
-        bias1 = torch.sum(torch.square(narrow_bias_1.unsqueeze(0) - t_s[:, 1].unsqueeze(1)))
+        narrow_bias_1 = torch.ones(1500).to(DEVICE) * 0.8
+        bias1 = torch.sum(torch.square(narrow_bias_1.unsqueeze(0) - t_s[:, 1].unsqueeze(1)), -1)
 
-        narrow_bias_2 = -torch.ones(1600).to(DEVICE) * 0.8
-        bias2 = torch.sum(torch.square(narrow_bias_2.unsqueeze(0) - t_s[:, 1].unsqueeze(1)))
+        narrow_bias_2 = -torch.ones(1500).to(DEVICE) * 0.8
+        bias2 = torch.sum(torch.square(narrow_bias_2.unsqueeze(0) - t_s[:, 1].unsqueeze(1)), -1)
 
-        reward = reward + bias1 + bias2
+        bias = bias1 + bias2
 
-        narrow_bias_1 = torch.ones(1600).to(DEVICE) * 0.8
-        bias1 = torch.sum(torch.square(narrow_bias_1.unsqueeze(0) - t_p_s[:, 1].unsqueeze(1)))
+        narrow_bias_1 = torch.ones(1500).to(DEVICE) * 0.8
+        bias1 = torch.sum(torch.square(narrow_bias_1.unsqueeze(0) - t_p_s[:, 1].unsqueeze(1)), -1)
 
-        narrow_bias_2 = -torch.ones(1600).to(DEVICE) * 0.8
-        bias2 = torch.sum(torch.square(narrow_bias_2.unsqueeze(0) - t_p_s[:, 1].unsqueeze(1)))
+        narrow_bias_2 = -torch.ones(1500).to(DEVICE) * 0.8
+        bias2 = torch.sum(torch.square(narrow_bias_2.unsqueeze(0) - t_p_s[:, 1].unsqueeze(1)), -1)
 
-        reward = reward - bias1 - bias2
+        bias = bias - bias1 - bias2
+        # print("bias", bias[-200:-1])
+        reward = reward + bias
 
-        return reward / 100
+        return reward
 
     def reward(self,  *trajectory):
         n_p_s, n_a, n_s, n_r, n_d, sk_idx = np.squeeze(trajectory)
