@@ -90,57 +90,70 @@ class Concept(BASE.BaseControl):
         self.criterion = nn.MSELoss(reduction='mean')
 
     def cal_reward(self, t_p_s, t_s, sk_idx):
-
+        # print("tps and ts = ")
+        # print(t_p_s[:, 1])
+        # print(t_s[:, 1])
         distance_mat = torch.square(t_p_s[:, 1].unsqueeze(0) - t_s[:, 1].unsqueeze(1))
+        # print("distance mat = ")
+        # print(distance_mat)
         traj = len(t_p_s) / self.sk_n
         subtract = torch.zeros(len(t_p_s)).to(DEVICE)
-        print(traj)
+        # print(traj)
 
         i = 0
         while i < len(t_p_s):
+            # print("i = ", i)
             if int(sk_idx[i] * traj + i + 1) == int((sk_idx[i] + 1) * traj):
                 subtract[i] = torch.tensor(0)
+                # print(0)
             else:
                 subtract[i] = torch.sum(distance_mat[i][int(sk_idx[i] * traj + i + 1):int((sk_idx[i] + 1) * traj)], -1)
+                # print(distance_mat[i][int(sk_idx[i] * traj + i + 1):int((sk_idx[i] + 1) * traj)])
             i = i + 1
         # 0 부터 subtract, ts가 tps랑 같아지는 시점부터
         distance = torch.sum(distance_mat, -1)
-
+        # print(distance)
         reward = distance - subtract
-
+        # print(reward)
         distance_mat = torch.square(t_p_s[:, 1].unsqueeze(0) - t_p_s[:, 1].unsqueeze(1))
+        # print("sec distance", distance_mat)
         traj = len(t_p_s) / self.sk_n
         subtract = torch.zeros(len(t_p_s)).to(DEVICE)
         i = 0
         while i < len(t_p_s):
+            # print("sec i = ", i)
             if int(sk_idx[i] * traj + i + 1) == int((sk_idx[i] + 1) * traj):
                 subtract[i] = torch.tensor(0)
+                # print(0)
             else:
                 subtract[i] = torch.sum(distance_mat[i][int(sk_idx[i] * traj + i + 1):int((sk_idx[i] + 1) * traj)], -1)
+                # print(distance_mat[i][int(sk_idx[i] * traj + i + 1):int((sk_idx[i] + 1) * traj)])
             i = i + 1
         # 0바로 다음부터 subtract, tps랑 target tps랑 같아지는 시점 이후부터 뭐0 부터해도 상관없음
         distance = torch.sum(distance_mat, -1)
-
+        # print(distance)
         reward = reward - distance + subtract
-
-        narrow_bias_1 = torch.ones(1500).to(DEVICE) * 0.8
+        # print(reward)
+        """
+        narrow_bias_1 = torch.ones(len(t_p_s)).to(DEVICE) * 0.9
         bias1 = torch.sum(torch.square(narrow_bias_1.unsqueeze(0) - t_s[:, 1].unsqueeze(1)), -1)
 
-        narrow_bias_2 = -torch.ones(1500).to(DEVICE) * 0.8
+        narrow_bias_2 = -torch.ones(len(t_p_s)).to(DEVICE) * 0.9
         bias2 = torch.sum(torch.square(narrow_bias_2.unsqueeze(0) - t_s[:, 1].unsqueeze(1)), -1)
 
         bias = bias1 + bias2
-
-        narrow_bias_1 = torch.ones(1500).to(DEVICE) * 0.8
+        # print("first bias = ", bias)
+        narrow_bias_1 = torch.ones(len(t_p_s)).to(DEVICE) * 0.9
         bias1 = torch.sum(torch.square(narrow_bias_1.unsqueeze(0) - t_p_s[:, 1].unsqueeze(1)), -1)
 
-        narrow_bias_2 = -torch.ones(1500).to(DEVICE) * 0.8
+        narrow_bias_2 = -torch.ones(len(t_p_s)).to(DEVICE) * 0.9
         bias2 = torch.sum(torch.square(narrow_bias_2.unsqueeze(0) - t_p_s[:, 1].unsqueeze(1)), -1)
-
+        # print("sec bias = ", bias1 + bias2)
         bias = bias - bias1 - bias2
         # print("bias", bias[-200:-1])
         reward = reward + bias
-
+        # print("final value = ", reward)
+        """
         return reward
 
     def reward(self,  *trajectory):
@@ -167,6 +180,7 @@ class Concept(BASE.BaseControl):
             i = i + 1
 
             loss2_ary = self.policy.update(self.buffer.get_dataset(), policy_list=self.policy_list,
+                                           reward=self.cal_reward,
                                            naf_list=self.naf_list,
                                            upd_queue_list=self.upd_queue_list, base_queue_list=self.base_queue_list,
                                            optimizer_p=self.optimizer_p, optimizer_q=self.optimizer_q,

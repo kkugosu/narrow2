@@ -78,8 +78,10 @@ class Memory:
                 pause = t
         if pretrain == 1:
             with torch.no_grad():
+                print("in buffer")
                 reward = reward_f(next(iter(self.dataloader)))
                 # print("reward = ", reward[-100:-1])
+                print("in buffer f")
             self.reward_converter(reward)
         else:
             pass

@@ -92,19 +92,21 @@ class Narrow:
         return (self.player.state - np.array([50, 100]))/100, reward, info
 
     def pseudo_step(self, state, act):
+        next_state = np.zeros((len(state), 2))
+        i = 0
+        while i < len(state):
+            self.player.state = state[i]*100 + np.array([50, 100])
+            self.player.state = self.player.state + np.array([1, act[i]*10])
+            self.player.update_rect()
+            for args in self.walls:
+                if pygame.sprite.collide_rect(self.player, args):
+                    self.player.state = self.player.state - np.array([0, act[i]*10])
+                    break
+                    # collide when this change
+            next_state[i] = self.player.state
+            i = i + 1
 
-        self.player.state = state*100 + np.array([50, 100])
-        self.player.state = self.player.state + np.array([1, act*20])
-        self.player.update_rect()
-        for args in self.walls:
-            if pygame.sprite.collide_rect(self.player, args):
-
-                self.player.state = self.player.state - np.array([0, act*20])
-                break
-                # collide when this change
-        reward = 0
-        info = {}
-        return (self.player.state - np.array([50, 100]))/100, reward, info
+        return (next_state - np.array([50, 100]))/100
 
     def render(self):
         for event in pygame.event.get():

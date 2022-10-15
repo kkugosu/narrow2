@@ -45,7 +45,7 @@ class Render:
                 n_o, n_r, info = self.env.step(n_a.squeeze())
                 print(n_a)
                 print(t_p_o)
-                print(self.control.upd_queue_list[0](sa))
+                # print(self.control.upd_queue_list[0](sa))
                 n_d = 0
             total_performance = total_performance + n_r
             n_p_o = n_o

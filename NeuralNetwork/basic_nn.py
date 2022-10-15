@@ -38,9 +38,9 @@ class ValueNN(nn.Module):
 
     def forward(self, input_element):
         output = self.Linear_1(input_element)
-        output = log_act(output)
+        output = self.ELU(output)
         output = self.Linear_2(output)
-        output = log_act(output)
+        output = self.ELU(output)
         output = self.Linear_3(output)
         return output
 

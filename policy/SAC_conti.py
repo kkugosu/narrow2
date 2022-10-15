@@ -25,16 +25,16 @@ class SACPolicy(BASE.BasePolicy):
             t_s = encoder(t_s)
         with torch.no_grad():
             mean, v, t_a = policy[index].prob(t_s)
-            t_a = torch.clamp(t_a, min=-200, max=200)
+            t_a = torch.clamp(t_a, min=-10, max=10)
             if random == 0:
-                t_a = torch.clamp(mean, min=-200, max=200)
+                t_a = torch.clamp(mean, min=-10, max=10)
 
         n_a = t_a.cpu().numpy()
         n_a = n_a
 
         return n_a
 
-    def update(self, *trajectory, policy_list, naf_list, upd_queue_list, base_queue_list,
+    def update(self, *trajectory, reward, policy_list, naf_list, upd_queue_list, base_queue_list,
                optimizer_p, optimizer_q, memory_iter=0, encoder=None):
         i = 0
         queue_loss = None
@@ -75,23 +75,49 @@ class SACPolicy(BASE.BasePolicy):
                 mean, cov, _ = naf_list[skill_id].prob(t_p_s[skill_id])
                 _nps = t_p_s[skill_id].cpu().numpy()
 
-                x = torch.tensor([-20, 0, 20]).to(DEVICE)
+                x = torch.tensor([-16, -12, -8, -4, 0, 4, 8, 12, 16]).to(DEVICE)
                 x = x.repeat((len(_nps), 1))
 
-                diff = (x - mean.repeat((1, 3)))
-
+                diff = (x - mean.repeat((1, 9)))
+                # print("difference = ", diff)
+                # print("cov = ", cov)
                 prob = (-1 / 2) * torch.square(diff/cov)
 
-                new_tps = t_p_s[0].repeat((1, 3))
-                new_tps = new_tps.reshape(-1, 2)
-                new_x = x.reshape(-1, 1)
-                sa_in = torch.cat((new_tps, new_x), -1)
-                sa_in = sa_in.reshape(-1, 3, 3)
+                new_tps = t_p_s[0].repeat((1, 9))
+                sk_idx = np.expand_dims(sk_idx, axis=-1)
+                new_sk_idx = np.repeat(np.array(sk_idx), 9, axis=-1)
 
-                policy_loss = torch.sum(torch.exp(prob) * (prob - base_queue_list[skill_id](sa_in).squeeze()))
+                new_tps = new_tps.reshape(-1, 2)
+                new_x = x.reshape(-1)
+
+                action = new_x.cpu().numpy()
+                _nps = new_tps.cpu().numpy()
+
+                out_ns = self.env.pseudo_step(_nps, action)
+
+                out_ts = torch.from_numpy(out_ns).to(DEVICE)
+                out_ts = out_ts.reshape(-1, 9, 2)
+                out_ts = torch.transpose(out_ts, 0, 1)
+                target = torch.zeros((9, len(t_p_s[0]))).to(DEVICE)
+                i = 0
+                while i < 9:
+                    # print("target", i)
+                    target[i] = reward(t_p_s[0], out_ts[i], sk_idx)
+                    i = i + 1
+                print(target[:10])
+                target = target.T
+                print("ttt", target[:10])
+                print("target size")
+
+                # sa_in = torch.cat((new_tps, new_x), -1)
+                # sa_in = sa_in.reshape(-1, 9, 3)
+                print(prob)
+                policy_loss = torch.sum(torch.exp(prob) * (prob - target))
 
                 skill_id = skill_id + 1
-
+            """
+            
+            """
             sa_pair = torch.cat((t_p_s, t_a), -1).type(torch.float32)
             skill_id = 0 # seq training
             queue_loss = 0
@@ -101,13 +127,14 @@ class SACPolicy(BASE.BasePolicy):
 
                 sa_pair_ = torch.cat((t_s, act), -1).type(torch.float32)
                 with torch.no_grad():
-                    print("tr", t_r)
+
                     t_qvalue = t_r[skill_id] + GAMMA*base_queue_list[skill_id](sa_pair_).squeeze()
 
                 queue_loss = queue_loss + self.criterion(t_p_qvalue, t_qvalue)
                 skill_id = skill_id + 1
 
             print("queueloss = ", queue_loss)
+
             print("policy loss = ", policy_loss)
 
             optimizer_p.zero_grad()
@@ -119,7 +146,7 @@ class SACPolicy(BASE.BasePolicy):
                     param.grad.data.clamp_(-1, 1)
                 i = i + 1
             optimizer_p.step()
-
+            """
             optimizer_q.zero_grad()
 
             queue_loss.backward(retain_graph=True)
@@ -134,6 +161,7 @@ class SACPolicy(BASE.BasePolicy):
                 pass
             else:
                 optimizer_q.step()
+            """
 
             i = i + 1
         # print("loss1 = ", policy_loss.squeeze())

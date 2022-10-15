@@ -119,12 +119,12 @@ if __name__ == "__main__":
     print("enter memory capacity recommend 1000")
     print("batchsize = capacity")
     print("capacity = 1000")
-    CAPACITY = 1500 # get_integer()
+    CAPACITY = 1000 # get_integer()
     BATCH_SIZE = CAPACITY
 
     print("memory reset time recommend 100")
     print("train iter = 100")
-    TRAIN_ITER = 10
+    TRAIN_ITER = 50
 
     print("train_iteration per memory recommend 10")
     print("memory iter = 10")
