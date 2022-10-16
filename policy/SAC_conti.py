@@ -25,9 +25,9 @@ class SACPolicy(BASE.BasePolicy):
             t_s = encoder(t_s)
         with torch.no_grad():
             mean, v, t_a = policy[index].prob(t_s)
-            t_a = torch.clamp(t_a, min=-10, max=10)
+            t_a = torch.clamp(t_a, min=-2, max=2)
             if random == 0:
-                t_a = torch.clamp(mean, min=-10, max=10)
+                t_a = torch.clamp(mean, min=-2, max=2)
 
         n_a = t_a.cpu().numpy()
         n_a = n_a
@@ -111,8 +111,9 @@ class SACPolicy(BASE.BasePolicy):
 
                 # sa_in = torch.cat((new_tps, new_x), -1)
                 # sa_in = sa_in.reshape(-1, 9, 3)
-                print(prob)
-                policy_loss = torch.sum(torch.exp(prob) * (prob - target))
+                policy_loss = torch.sum(-target * prob)
+                # policy_loss = torch.sum(-torch.exp(target) * prob)
+                # forward kld
 
                 skill_id = skill_id + 1
             """

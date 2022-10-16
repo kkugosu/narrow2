@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
     print("memory reset time recommend 100")
     print("train iter = 100")
-    TRAIN_ITER = 50
+    TRAIN_ITER = 1
 
     print("train_iteration per memory recommend 10")
     print("memory iter = 10")
@@ -132,7 +132,7 @@ if __name__ == "__main__":
 
     print("enter learning rate recommend 0.01")
     print("learning rate = 0.0001")
-    learning_rate = 1e-6
+    learning_rate = 1e-7
 
     print("enter eligibility trace step, if pg: 100, if gps: 1")
     print("e_trace = 1")
@@ -143,7 +143,7 @@ if __name__ == "__main__":
     done_penalty = 0
 
     print("load previous model 0 or 1")
-    load_ = 0 #input("->")
+    load_ = 1 #input("->")
 
     print("num_skills?")
     print("skillnum = 10")

@@ -135,7 +135,7 @@ class NAFPolicy:
         action_var = self.policy(state)
         action, var = torch.split(action_var, [1, 1], dim=-1)
 
-        std = (var**2)
+        std = 0.3# (var**2)*100
 
         # print("prepse = ", pre_psd)
         # print("mean = ", mean)

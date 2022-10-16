@@ -133,7 +133,7 @@ class Concept(BASE.BaseControl):
         distance = torch.sum(distance_mat, -1)
         # print(distance)
         reward = reward - distance + subtract
-        # print(reward)
+        # print("reward = ",reward)
         """
         narrow_bias_1 = torch.ones(len(t_p_s)).to(DEVICE) * 0.9
         bias1 = torch.sum(torch.square(narrow_bias_1.unsqueeze(0) - t_s[:, 1].unsqueeze(1)), -1)
