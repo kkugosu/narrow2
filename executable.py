@@ -84,7 +84,7 @@ if __name__ == "__main__":
             else:
                 print("error")
 
-    STATE_LENGTH = 2
+    STATE_LENGTH = 18
 
     if env_name == "cart":
         ACTION_LENGTH = 2
@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
     print("memory reset time recommend 100")
     print("train iter = 100")
-    TRAIN_ITER = 1
+    TRAIN_ITER = 10
 
     print("train_iteration per memory recommend 10")
     print("memory iter = 10")

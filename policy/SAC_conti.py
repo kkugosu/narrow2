@@ -9,6 +9,29 @@ GAMMA = 0.90
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
+def state_converter(state):
+    x = torch.arange(17).to(DEVICE)
+    new_state = torch.zeros(18).to(DEVICE)
+    out = torch.exp(-torch.square(x - state[0]))
+
+    new_state[:17] = out
+    new_state[-1] = state[-1]
+    return new_state
+
+
+def batch_state_converter(state):
+    # print("state", state)
+    x = torch.arange(17).to(DEVICE)
+    new_state = torch.zeros((len(state), 18)).to(DEVICE)
+    out = torch.exp(-torch.square(x.unsqueeze(0) - state[:, 0].squeeze().unsqueeze(-1)))
+    # print("out", out.size())
+    # print(new_state[:, :17].size())
+    new_state[:, :17] = out
+    new_state[:, -1] = state[:, -1]
+    # print("state", new_state.size())
+    return new_state
+
+
 class SACPolicy(BASE.BasePolicy):
     def __init__(self, *args) -> None:
         super().__init__(*args)
@@ -18,7 +41,7 @@ class SACPolicy(BASE.BasePolicy):
 
     def action(self, n_s, policy, index, per_one=1, encoder=None, random=1):
         t_s = torch.from_numpy(n_s).type(torch.float32).to(self.device)
-        # t_s = state_converter(t_s)
+        t_s = state_converter(t_s)
         if encoder is None:
             pass
         else:
@@ -51,15 +74,17 @@ class SACPolicy(BASE.BasePolicy):
         while i < self.m_i:
 
             n_p_s, n_a, n_s, n_r, n_d, sk_idx = np.squeeze(trajectory)
-            t_p_s = torch.tensor(n_p_s, dtype=torch.float32).to(self.device)
+            _t_p_s = torch.tensor(n_p_s, dtype=torch.float32).to(self.device)
+            t_p_s = batch_state_converter(_t_p_s)
             t_s = torch.tensor(n_s, dtype=torch.float32).to(self.device)
+            t_s = batch_state_converter(t_s)
             if encoder is not None:
                 with torch.no_grad():
                     encoded_t_p_s = encoder(t_p_s)
             else:
                 encoded_t_p_s = t_p_s
             t_p_s = self.skill_converter(encoded_t_p_s, sk_idx, per_one=0)
-
+            _t_p_s = self.skill_converter(_t_p_s, sk_idx, per_one=0)
             t_a = torch.tensor(n_a, dtype=torch.float32).to(self.device)
             t_a = self.skill_converter(t_a, sk_idx, per_one=0)
             t_r = torch.tensor(n_r, dtype=torch.float32).to(self.device)
@@ -71,21 +96,17 @@ class SACPolicy(BASE.BasePolicy):
 
             skill_id = 0  # seq training
             while skill_id < self.sk_n:
-                _ts = torch.zeros((3, len(n_s), 2))
                 mean, cov, _ = naf_list[skill_id].prob(t_p_s[skill_id])
-                _nps = t_p_s[skill_id].cpu().numpy()
 
                 x = torch.tensor([-16, -12, -8, -4, 0, 4, 8, 12, 16]).to(DEVICE)
-                x = x.repeat((len(_nps), 1))
-
+                x = x.repeat((len(t_p_s[skill_id]), 1))
                 diff = (x - mean.repeat((1, 9)))
                 # print("difference = ", diff)
                 # print("cov = ", cov)
                 prob = (-1 / 2) * torch.square(diff/cov)
 
-                new_tps = t_p_s[0].repeat((1, 9))
+                new_tps = _t_p_s[0].repeat((1, 9))
                 sk_idx = np.expand_dims(sk_idx, axis=-1)
-                new_sk_idx = np.repeat(np.array(sk_idx), 9, axis=-1)
 
                 new_tps = new_tps.reshape(-1, 2)
                 new_x = x.reshape(-1)
@@ -102,16 +123,15 @@ class SACPolicy(BASE.BasePolicy):
                 i = 0
                 while i < 9:
                     # print("target", i)
-                    target[i] = reward(t_p_s[0], out_ts[i], sk_idx)
+                    target[i] = reward(_t_p_s[0], out_ts[i], sk_idx)
                     i = i + 1
-                print(target[:10])
                 target = target.T
                 print("ttt", target[:10])
                 print("target size")
 
                 # sa_in = torch.cat((new_tps, new_x), -1)
                 # sa_in = sa_in.reshape(-1, 9, 3)
-                policy_loss = torch.sum(-target * prob)
+                policy_loss = torch.mean(-target * prob)
                 # policy_loss = torch.sum(-torch.exp(target) * prob)
                 # forward kld
 

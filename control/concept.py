@@ -16,6 +16,30 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 # a_l = 2 up or down
 
 
+def state_converter(state):
+    x = torch.arange(17).to(DEVICE)
+    new_state = torch.zeros(18).to(DEVICE)
+    out = torch.exp(-torch.square(x - state[0]))
+
+    new_state[:17] = out
+    new_state[-1] = state[-1]
+    return new_state
+
+
+def batch_state_converter(state):
+    # print("state", state)
+    # print(state.size())
+    x = torch.arange(17).to(DEVICE)
+    new_state = torch.zeros((len(state), 18)).to(DEVICE)
+    out = torch.exp(-torch.square(x.unsqueeze(0) - state[:, 0].squeeze().unsqueeze(-1)))
+    # print("out", out.size())
+    # print(new_state[:, :17].size())
+    new_state[:, :17] = out
+    new_state[:, -1] = state[:, -1]
+    # print("state", new_state.size())
+    return new_state
+
+
 class Concept(BASE.BaseControl):
     def __init__(self, *args) -> None:
         super().__init__(*args)
@@ -51,7 +75,7 @@ class Concept(BASE.BaseControl):
                 param.register_hook(lambda grad: torch.nan_to_num(grad, nan=0.0))
                 network_p.append(param)
                 if name == "Linear_1.bias":
-                    lr_p.append(self.l_r*100)
+                    lr_p.append(self.l_r*10)
                 else:
                     lr_p.append(self.l_r)
                 weight_decay_p.append(0.1)
@@ -65,7 +89,7 @@ class Concept(BASE.BaseControl):
                 param.register_hook(lambda grad: torch.nan_to_num(grad, nan=0.0))
                 network_q.append(param)
                 if name == "Linear_1.bias":
-                    lr_p.append(self.l_r*100)
+                    lr_p.append(self.l_r*10)
                 else:
                     lr_p.append(self.l_r)
                 lr_q.append(self.l_r)
@@ -90,12 +114,13 @@ class Concept(BASE.BaseControl):
         self.criterion = nn.MSELoss(reduction='mean')
 
     def cal_reward(self, t_p_s, t_s, sk_idx):
-        # print("tps and ts = ")
-        # print(t_p_s[:, 1])
-        # print(t_s[:, 1])
-        distance_mat = torch.square(t_p_s[:, 1].unsqueeze(0) - t_s[:, 1].unsqueeze(1))
-        # print("distance mat = ")
-        # print(distance_mat)
+
+        t_p_s = batch_state_converter(t_p_s)
+
+        t_s = batch_state_converter(t_s)
+
+        distance_mat = torch.square(t_p_s[:, -1].unsqueeze(0) - t_s[:, -1].unsqueeze(1))
+
         traj = len(t_p_s) / self.sk_n
         subtract = torch.zeros(len(t_p_s)).to(DEVICE)
         # print(traj)
@@ -115,7 +140,7 @@ class Concept(BASE.BaseControl):
         # print(distance)
         reward = distance - subtract
         # print(reward)
-        distance_mat = torch.square(t_p_s[:, 1].unsqueeze(0) - t_p_s[:, 1].unsqueeze(1))
+        distance_mat = torch.square(t_p_s[:, -1].unsqueeze(0) - t_p_s[:, -1].unsqueeze(1))
         # print("sec distance", distance_mat)
         traj = len(t_p_s) / self.sk_n
         subtract = torch.zeros(len(t_p_s)).to(DEVICE)
