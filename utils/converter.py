@@ -143,7 +143,7 @@ class NAFPolicy:
         # print(mean)
         # print(psd)
 
-        return action*2, std, torch.normal(mean=action*2, std=std)
+        return action*20, std, torch.normal(mean=action*20, std=std)
         # psd = psd no exception occered
 
 

@@ -79,7 +79,7 @@ class Narrow:
 
     def step(self, act):
 
-        self.player.state = self.player.state + np.array([1, act*10])
+        self.player.state = self.player.state + np.array([50, act*10])
         self.player.update_rect()
         for args in self.walls:
             if pygame.sprite.collide_rect(self.player, args):
@@ -96,7 +96,7 @@ class Narrow:
         i = 0
         while i < len(state):
             self.player.state = state[i]*100 + np.array([50, 100])
-            self.player.state = self.player.state + np.array([1, act[i]*10])
+            self.player.state = self.player.state + np.array([50, act[i]*10])
             self.player.update_rect()
             for args in self.walls:
                 if pygame.sprite.collide_rect(self.player, args):

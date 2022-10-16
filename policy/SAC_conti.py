@@ -10,25 +10,23 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 def state_converter(state):
-    x = torch.arange(17).to(DEVICE)
-    new_state = torch.zeros(18).to(DEVICE)
-    out = torch.exp(-torch.square(x - state[0]))
-
-    new_state[:17] = out
+    x = torch.zeros(32).to(DEVICE)
+    new_state = torch.zeros(33).to(DEVICE)
+    index = int(state[0]/0.5)
+    x[index] += 1
+    new_state[:32] = x
     new_state[-1] = state[-1]
     return new_state
 
 
 def batch_state_converter(state):
-    # print("state", state)
-    x = torch.arange(17).to(DEVICE)
-    new_state = torch.zeros((len(state), 18)).to(DEVICE)
-    out = torch.exp(-torch.square(x.unsqueeze(0) - state[:, 0].squeeze().unsqueeze(-1)))
-    # print("out", out.size())
-    # print(new_state[:, :17].size())
-    new_state[:, :17] = out
+    x = torch.zeros((len(state), 32)).to(DEVICE)
+    src = torch.ones((len(state), 32)).to(DEVICE)
+    new_state = torch.zeros((len(state), 33)).to(DEVICE)
+    index = (state[:, 0] / 0.5).type(torch.int64).unsqueeze(-1)
+    x = x.scatter_(1, index, src)
+    new_state[:, :32] = x
     new_state[:, -1] = state[:, -1]
-    # print("state", new_state.size())
     return new_state
 
 
@@ -48,9 +46,9 @@ class SACPolicy(BASE.BasePolicy):
             t_s = encoder(t_s)
         with torch.no_grad():
             mean, v, t_a = policy[index].prob(t_s)
-            t_a = torch.clamp(t_a, min=-2, max=2)
+            t_a = torch.clamp(t_a, min=-10, max=10)
             if random == 0:
-                t_a = torch.clamp(mean, min=-2, max=2)
+                t_a = torch.clamp(mean, min=-10, max=10)
 
         n_a = t_a.cpu().numpy()
         n_a = n_a
@@ -126,8 +124,7 @@ class SACPolicy(BASE.BasePolicy):
                     target[i] = reward(_t_p_s[0], out_ts[i], sk_idx)
                     i = i + 1
                 target = target.T
-                print("ttt", target[:10])
-                print("target size")
+                print("ttt", target[:5])
 
                 # sa_in = torch.cat((new_tps, new_x), -1)
                 # sa_in = sa_in.reshape(-1, 9, 3)
