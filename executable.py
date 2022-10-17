@@ -84,7 +84,7 @@ if __name__ == "__main__":
             else:
                 print("error")
 
-    STATE_LENGTH = 33
+    STATE_LENGTH = 201
 
     if env_name == "cart":
         ACTION_LENGTH = 2
@@ -119,12 +119,12 @@ if __name__ == "__main__":
     print("enter memory capacity recommend 1000")
     print("batchsize = capacity")
     print("capacity = 1000")
-    CAPACITY = 30 # get_integer()
+    CAPACITY = 190 # get_integer()
     BATCH_SIZE = CAPACITY
 
     print("memory reset time recommend 100")
     print("train iter = 100")
-    TRAIN_ITER = 200
+    TRAIN_ITER = 50
 
     print("train_iteration per memory recommend 10")
     print("memory iter = 10")
@@ -132,7 +132,7 @@ if __name__ == "__main__":
 
     print("enter learning rate recommend 0.01")
     print("learning rate = 0.0001")
-    learning_rate = 1e-6
+    learning_rate = 1e-5
 
     print("enter eligibility trace step, if pg: 100, if gps: 1")
     print("e_trace = 1")

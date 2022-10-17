@@ -35,7 +35,7 @@ class Memory:
                 t = 0
                 while t < (tot_idx*traj_l) - total_num: # if pg, gain accumulate
                     with torch.no_grad():
-                        n_a = action_f(n_p_s, policy, _index, encoder=encoder)
+                        n_a = action_f(n_p_s, policy, _index, encoder=encoder, random=0)
                     # n_s, n_r, n_i = self.env.step(n_a[_index*self.a_l:(_index+1)*self.a_l])
 
                     n_s, n_r, n_i = self.env.step(n_a.squeeze())

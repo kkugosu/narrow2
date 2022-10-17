@@ -49,7 +49,7 @@ class Render:
                 n_d = 0
             total_performance = total_performance + n_r
             n_p_o = n_o
-            time.sleep(0.2)
+            time.sleep(0.1)
             self.env.render()
             t = t + 1
 

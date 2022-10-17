@@ -17,22 +17,22 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 def state_converter(state):
-    x = torch.zeros(32).to(DEVICE)
-    new_state = torch.zeros(33).to(DEVICE)
-    index = int(state[0]/0.5)
+    x = torch.zeros(200).to(DEVICE)
+    new_state = torch.zeros(201).to(DEVICE)
+    index = int(state[0]/0.05)
     x[index] += 1
-    new_state[:32] = x
+    new_state[:200] = x
     new_state[-1] = state[-1]
     return new_state
 
 
 def batch_state_converter(state):
-    x = torch.zeros((len(state), 32)).to(DEVICE)
-    src = torch.ones((len(state), 32)).to(DEVICE)
-    new_state = torch.zeros((len(state), 33)).to(DEVICE)
-    index = (state[:, 0] / 0.5).type(torch.int64).unsqueeze(-1)
+    x = torch.zeros((len(state), 200)).to(DEVICE)
+    src = torch.ones((len(state), 200)).to(DEVICE)
+    new_state = torch.zeros((len(state), 201)).to(DEVICE)
+    index = (state[:, 0] / 0.05).type(torch.int64).unsqueeze(-1)
     x = x.scatter_(1, index, src)
-    new_state[:, :32] = x
+    new_state[:, :200] = x
     new_state[:, -1] = state[:, -1]
     return new_state
 

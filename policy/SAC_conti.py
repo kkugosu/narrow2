@@ -10,22 +10,22 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 def state_converter(state):
-    x = torch.zeros(32).to(DEVICE)
-    new_state = torch.zeros(33).to(DEVICE)
-    index = int(state[0]/0.5)
+    x = torch.zeros(200).to(DEVICE)
+    new_state = torch.zeros(201).to(DEVICE)
+    index = int(state[0]/0.05)
     x[index] += 1
-    new_state[:32] = x
+    new_state[:200] = x
     new_state[-1] = state[-1]
     return new_state
 
 
 def batch_state_converter(state):
-    x = torch.zeros((len(state), 32)).to(DEVICE)
-    src = torch.ones((len(state), 32)).to(DEVICE)
-    new_state = torch.zeros((len(state), 33)).to(DEVICE)
-    index = (state[:, 0] / 0.5).type(torch.int64).unsqueeze(-1)
+    x = torch.zeros((len(state), 200)).to(DEVICE)
+    src = torch.ones((len(state), 200)).to(DEVICE)
+    new_state = torch.zeros((len(state), 201)).to(DEVICE)
+    index = (state[:, 0] / 0.05).type(torch.int64).unsqueeze(-1)
     x = x.scatter_(1, index, src)
-    new_state[:, :32] = x
+    new_state[:, :200] = x
     new_state[:, -1] = state[:, -1]
     return new_state
 
@@ -124,12 +124,13 @@ class SACPolicy(BASE.BasePolicy):
                     target[i] = reward(_t_p_s[0], out_ts[i], sk_idx)
                     i = i + 1
                 target = target.T
-                print("ttt", target[:5])
+                print("ttt", target[:30])
 
                 # sa_in = torch.cat((new_tps, new_x), -1)
                 # sa_in = sa_in.reshape(-1, 33, 3)
                 policy_loss = torch.mean(-target * prob)
-                # policy_loss = torch.sum(-torch.exp(target) * prob)
+                # policy_loss = torch.sum(torch.exp(prob) * (prob - target))
+                print(prob[:30])
                 # forward kld
 
                 skill_id = skill_id + 1
