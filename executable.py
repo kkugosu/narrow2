@@ -132,7 +132,7 @@ if __name__ == "__main__":
 
     print("enter learning rate recommend 0.01")
     print("learning rate = 0.0001")
-    learning_rate = 1e-7
+    learning_rate = 1e-6
 
     print("enter eligibility trace step, if pg: 100, if gps: 1")
     print("e_trace = 1")
